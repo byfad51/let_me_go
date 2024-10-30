@@ -19,33 +19,15 @@ class CustomRoadMapPainter extends CustomPainter {
     canvas.drawLine(Offset(size.width * 0.5, size.height * 0.1), Offset(size.width * 0.5, size.height * 0.9), roadPaint);
 
     // Sağ dikey yol
-    canvas.drawLine(Offset(size.width * 0.8, size.height * 0.1), Offset(size.width * 0.8, size.height * 0.9), roadPaint);
+    canvas.drawLine(Offset(size.width * .8, size.height * 0.6), Offset(size.width * 0.8, size.height * 0.9), roadPaint);
 
     // Yatay yollar
-    canvas.drawLine(Offset(size.width * 0.1, size.height * 0.25), Offset(size.width * 0.9, size.height * 0.25), roadPaint);
-    canvas.drawLine(Offset(size.width * 0.1, size.height * 0.5), Offset(size.width * 0.9, size.height * 0.5), roadPaint);
-    canvas.drawLine(Offset(size.width * 0.1, size.height * 0.75), Offset(size.width * 0.9, size.height * 0.75), roadPaint);
+    canvas.drawLine(Offset(size.width * 0.5, size.height * 0.25), Offset(size.width * 0.9, size.height * 0.25), roadPaint);
+    canvas.drawLine(Offset(size.width * .1, size.height * 0.20), Offset(size.width * 0.5, size.height * 0.20), roadPaint);
+    canvas.drawLine(Offset(size.width * 0.1, size.height * 0.6), Offset(size.width * 0.9, size.height * 0.6), roadPaint);
 
-    // Yol üzerindeki yuvarlak düğümler
-  /*  List<Offset> circles = [
-      Offset(size.width * 0.2, size.height * 0.1),
-      Offset(size.width * 0.2, size.height * 0.25),
-      Offset(size.width * 0.2, size.height * 0.5),
-      Offset(size.width * 0.2, size.height * 0.75),
-      Offset(size.width * 0.1, size.height * 0.25),
-      Offset(size.width * 0.1, size.height * 0.75),
-      Offset(size.width * 0.5, size.height * 0.1),
-      Offset(size.width * 0.5, size.height * 0.25),
-      Offset(size.width * 0.8, size.height * 0.25),
-      Offset(size.width * 0.5, size.height * 0.5),
-      Offset(size.width * 0.5, size.height * 0.75),
-      Offset(size.width * 0.8, size.height * 0.5),
-      Offset(size.width * 0.8, size.height * 0.75),
-    ];
+    canvas.drawLine(Offset(size.width * 0.1, size.height * 0.75), Offset(size.width * 0.5, size.height * 0.75), roadPaint);
 
-    for (var circle in circles) {
-      canvas.drawCircle(circle, 25, circlePaint);
-    }*/
   }
 
   @override
@@ -56,6 +38,9 @@ class CustomRoadMap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(centerTitle: true,
+        title: Text('Let Me Go',),
+      ),
       body: Center(
         child: CustomPaint(
           size: Size(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height),
@@ -68,6 +53,7 @@ class CustomRoadMap extends StatelessWidget {
 
 void main() {
   runApp(MaterialApp(
+
     home: CustomRoadMap(),
   ));
 }
