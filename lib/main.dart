@@ -12,29 +12,43 @@ class Road {
 class CustomRoadMapPainter extends CustomPainter {
   final Matrix4 transform;
   final List<Road> roads; // Yolların listesi
+  final String? highlightedRoadId; // Yeşil yapılacak yolun ID'si
 
-  CustomRoadMapPainter(this.transform, this.roads);
+  CustomRoadMapPainter(this.transform, this.roads, this.highlightedRoadId);
 
   @override
   void paint(Canvas canvas, Size size) {
     canvas.save();
     canvas.transform(transform.storage); // Transformu uygula
 
+    // Normal yol boyası
     final roadPaint = Paint()
       ..color = Colors.grey[700]!
       ..strokeWidth = 20
       ..style = PaintingStyle.stroke;
 
+    // Seçilen yol boyası (yeşil)
+    final highlightedPaint = Paint()
+      ..color = Colors.green
+      ..strokeWidth = 20
+      ..style = PaintingStyle.stroke;
+
     // Yolları çizme
     for (var road in roads) {
-      canvas.drawLine(road.start, road.end, roadPaint);
+      if (road.id == highlightedRoadId) {
+        canvas.drawLine(road.start, road.end, highlightedPaint); // Seçili olan yolu yeşil çiz
+      } else {
+        canvas.drawLine(road.start, road.end, roadPaint); // Diğer yolları gri çiz
+      }
     }
 
     canvas.restore(); // Transformu sıfırla
   }
 
   @override
-  bool shouldRepaint(CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomRoadMapPainter oldDelegate) {
+    return oldDelegate.highlightedRoadId != highlightedRoadId;
+  }
 }
 
 class CustomRoadMap extends StatefulWidget {
@@ -46,6 +60,7 @@ class _CustomRoadMapState extends State<CustomRoadMap> {
   Matrix4 _transform = Matrix4.identity();
   double _scale = 1.0;
   Offset _offset = Offset.zero;
+  String? _highlightedRoadId; // Son tıklanan yolun ID'si
 
   final List<Road> _roads = []; // Yolları saklamak için liste
 
@@ -86,6 +101,9 @@ class _CustomRoadMapState extends State<CustomRoadMap> {
     // Tıklanan konumu kontrol et
     String? roadId = _findRoadId(transformedPosition);
     if (roadId != null) {
+      setState(() {
+        _highlightedRoadId = roadId; // Son tıklanan yolun ID'sini sakla
+      });
       print('Tıkladığınız yolun ID\'si: $roadId'); // Konsola ID'yi yaz
     } else {
       print('Tıklanan yol bulunamadı');
@@ -137,7 +155,7 @@ class _CustomRoadMapState extends State<CustomRoadMap> {
         child: Center(
           child: CustomPaint(
             size: Size(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height),
-            painter: CustomRoadMapPainter(_transform, _roads), // Yolları gönder
+            painter: CustomRoadMapPainter(_transform, _roads, _highlightedRoadId), // Yolları gönder
           ),
         ),
       ),
