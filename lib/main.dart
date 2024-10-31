@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-class Road {
-  final String id; // Yolun kimliği
-  final Offset start; // Başlangıç noktası
-  final Offset end; // Bitiş noktası
-  bool isSelected; // Yolun seçili olup olmadığını tutan özellik
+import 'models/road.dart';
 
-  Road(this.id, this.start, this.end, {this.isSelected = false});
-}
+
 
 class CustomRoadMapPainter extends CustomPainter {
   final Matrix4 transform;
@@ -56,7 +51,8 @@ class CustomRoadMap extends StatefulWidget {
 class _CustomRoadMapState extends State<CustomRoadMap> {
   Matrix4 _transform = Matrix4.identity();
   double _scale = 1.0;
-
+  Road? startRoad;
+  Road? endRoad;
   final List<Road> _roads = [];
 
   @override
@@ -68,15 +64,15 @@ class _CustomRoadMapState extends State<CustomRoadMap> {
   void _generateRoads() {
     // Başlangıç yolları
     List<Road> originalRoads = [
-      Road('road_1', Offset(0.2 * 400, 0.1 * 800), Offset(0.2 * 400, 0.9 * 800)),
-      Road('road_2', Offset(0.5 * 400, 0.1 * 800), Offset(0.5 * 400, 0.9 * 800)),
-      Road('road_3', Offset(0.8 * 400, 0.6 * 800), Offset(0.8 * 400, 0.9 * 800)),
-      Road('road_4', Offset(0.5 * 400, 0.25 * 800), Offset(0.9 * 400, 0.25 * 800)),
-      Road('road_5', Offset(0.1 * 400, 0.20 * 800), Offset(0.5 * 400, 0.20 * 800)),
-      Road('road_6', Offset(0.1 * 400, 0.6 * 800), Offset(0.9 * 400, 0.6 * 800)),
-      Road('road_7', Offset(0.1 * 400, 0.75 * 800), Offset(0.5 * 400, 0.75 * 800)),
+      Road('1', Offset(0.2 * 400, 0.1 * 800), Offset(0.2 * 400, 0.9 * 800)),
+      Road('2', Offset(0.5 * 400, 0.1 * 800), Offset(0.5 * 400, 0.9 * 800)),
+      Road('3', Offset(0.8 * 400, 0.6 * 800), Offset(0.8 * 400, 0.9 * 800)),
+      Road('4', Offset(0.5 * 400, 0.25 * 800), Offset(0.9 * 400, 0.25 * 800)),
+      Road('5', Offset(0.1 * 400, 0.20 * 800), Offset(0.5 * 400, 0.20 * 800)),
+      Road('6', Offset(0.1 * 400, 0.6 * 800), Offset(0.9 * 400, 0.6 * 800)),
+      Road('7', Offset(0.1 * 400, 0.75 * 800), Offset(0.5 * 400, 0.75 * 800)),
     ];
-
+    int lastRoadId = 7;
     // Kesişim kontrolü ve yolları ikiye bölme
     int segmentCounter = 1;
     for (var road in originalRoads) {
@@ -105,8 +101,8 @@ class _CustomRoadMapState extends State<CustomRoadMap> {
     for (var road in roads) {
       if (_isPointOnLine(intersection, road.start, road.end)) {
         // Böl yol
-        splitRoads.add(Road('${road.id}_part${segmentCounter++}', road.start, intersection));
-        splitRoads.add(Road('${road.id}_part${segmentCounter++}', intersection, road.end));
+        splitRoads.add(Road('${road.id}.${segmentCounter++}', road.start, intersection));
+        splitRoads.add(Road('${road.id}.${segmentCounter++}', intersection, road.end));
       } else {
         splitRoads.add(road); // Eğer kesişim yoksa orijinal yolu ekle
       }
@@ -161,7 +157,9 @@ class _CustomRoadMapState extends State<CustomRoadMap> {
     return (point - projection).distance;
   }
 
+  int selectedCount = 0;
   void _onTapDown(TapDownDetails details) {
+
     Offset localPosition = details.localPosition;
     Offset transformedPosition = _applyInverseTransform(localPosition);
 
@@ -170,13 +168,38 @@ class _CustomRoadMapState extends State<CustomRoadMap> {
     if (roadId != null) {
       setState(() {
         Road tappedRoad = _roads.firstWhere((road) => road.id == roadId);
+        if(selectedCount<2 || (tappedRoad.id== startRoad?.id || tappedRoad.id== endRoad?.id)){
+
+       if(tappedRoad.id== startRoad?.id){
+         startRoad=null;
+         selectedCount--;
+       }
+
+        if(tappedRoad.id== endRoad?.id){
+          endRoad=null;
+          selectedCount--;
+        }
+
         tappedRoad.isSelected = !tappedRoad.isSelected;
+        if(tappedRoad.isSelected){
+          if(startRoad==null){
+            startRoad = tappedRoad;
+            selectedCount++;
+          }else{
+            endRoad = tappedRoad;
+            selectedCount++;
+          }
+        }
+
+        }
       });
 
       print('Tıkladığınız yolun ID\'si: $roadId');
     } else {
       print('Tıklanan yol bulunamadı');
     }
+    print("start: "+startRoad.toString());
+    print("end: "+endRoad.toString());
   }
 
   Offset _applyInverseTransform(Offset point) {
@@ -222,7 +245,7 @@ class _CustomRoadMapState extends State<CustomRoadMap> {
 }
 
 void main() {
-  runApp(MaterialApp(
+  runApp(MaterialApp(debugShowCheckedModeBanner: false,
     home: CustomRoadMap(),
   ));
 }
