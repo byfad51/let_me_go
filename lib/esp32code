@@ -1,0 +1,215 @@
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+
+// LED pinleri
+const int GREEN1 = 2;  // İlk LED (GPIO2)
+const int GREEN2 = 15;  // İkinci LED (GPIO4)
+const int GREEN3 = 17; // Üçüncü LED (GPIO16)
+const int GREEN4 = 19; // Üçüncü LED (GPIO16)
+
+
+const int RED1 = 4;  // İlk LED (GPIO2)
+const int RED2 = 16;  // İkinci LED (GPIO4)
+const int RED3 = 18; // Üçüncü LED (GPIO16)
+const int RED4 = 21; // Üçüncü LED (GPIO16)
+
+
+// BLE servis ve karakteristik isimleri
+#define SERVICE_UUID        "12345678-1234-1234-1234-123456789abc"
+#define CHARACTERISTIC_UUID "abcd1234-abcd-1234-abcd-12345678abcd"
+
+bool stopAutoMode = false;  // Otomatik LED modunu durdurma
+int ledToLight = 0;         // BLE'den alınan komuta göre yanacak LED
+
+BLEAdvertising *pAdvertising; // BLE reklam nesnesi
+BLEServer *pServer;           // BLE sunucu nesnesi
+
+bool deviceConnected = false; // Bağlantı durumu takibi
+
+// BLE bağlantı durumunu takip etmek için callback sınıfı
+class MyServerCallbacks : public BLEServerCallbacks {
+  void onConnect(BLEServer* pServer) override {
+    deviceConnected = true;  // Bağlantı kuruldu
+    Serial.println("Cihaz bağlandı.");
+  }
+
+  void onDisconnect(BLEServer* pServer) override {
+    deviceConnected = false; // Bağlantı koptu
+    Serial.println("Cihaz bağlantısı koptu, yeniden yayın başlatılıyor.");
+    delay(100);  // Bağlantı stabilitesini sağlamak için küçük bir bekleme
+    pAdvertising->start();  // Reklamı tekrar başlat
+    stopAutoMode = false;
+    Serial.println("BLE yayını tekrar başlatıldı.");
+  }
+};
+
+// BLE karakteristiği için callback sınıfı
+class MyCallbacks : public BLECharacteristicCallbacks {
+  void onWrite(BLECharacteristic *pCharacteristic) override {
+    String value = pCharacteristic->getValue();
+    Serial.print("Gelen veri: ");
+    Serial.println(value.c_str());
+
+    if (value.length() > 0) {
+      stopAutoMode = true;  // Otomatik modu durdur
+      Serial.println("Otomatik mod durduruldu.");
+
+      if (value == "1") {
+        ledToLight = 1;
+        Serial.println("LED 1 seçildi.");
+      } else if (value == "2") {
+        ledToLight = 2;
+        Serial.println("LED 2 seçildi.");
+      } else if (value == "3") {
+        ledToLight = 3;
+        Serial.println("LED 3 seçildi.");
+      } else {
+        ledToLight = 0;  // Geçersiz komut
+        Serial.println("Geçersiz komut alındı.");
+      }
+    }
+  }
+};
+
+void setup() {
+  // Serial monitörü başlat
+  Serial.begin(115200);
+  Serial.println("ESP32 LED Kontrol Başlatıldı.");
+
+  // LED pinlerini çıkış olarak ayarla
+  pinMode(GREEN1, OUTPUT);
+  pinMode(GREEN2, OUTPUT);
+  pinMode(GREEN3, OUTPUT);
+  pinMode(GREEN4, OUTPUT);
+  pinMode(RED1, OUTPUT);
+  pinMode(RED2, OUTPUT);
+  pinMode(RED3, OUTPUT);
+  pinMode(RED4, OUTPUT);
+
+  // Tüm LED'leri başta kapalı yap
+  digitalWrite(GREEN1, LOW);
+  digitalWrite(GREEN2, LOW);
+  digitalWrite(GREEN3, LOW);
+  digitalWrite(GREEN4, LOW);
+  digitalWrite(RED1, LOW);
+  digitalWrite(RED2, LOW);
+  digitalWrite(RED3, LOW);
+  digitalWrite(RED4, LOW);
+  Serial.println("LED'ler başlangıçta kapalı.");
+
+  // BLE başlatma
+  BLEDevice::init("ESP32_LED_Controller");
+  pServer = BLEDevice::createServer();
+  pServer->setCallbacks(new MyServerCallbacks());
+
+  BLEService *pService = pServer->createService(SERVICE_UUID);
+  BLECharacteristic *pCharacteristic = pService->createCharacteristic(
+    CHARACTERISTIC_UUID,
+    BLECharacteristic::PROPERTY_WRITE
+  );
+
+  // BLE karakteristiği için callback sınıfını ayarla
+  pCharacteristic->setCallbacks(new MyCallbacks());
+  Serial.println("BLE hizmeti başlatıldı.");
+
+  pService->start();
+  pAdvertising = BLEDevice::getAdvertising();
+  pAdvertising->start();
+  Serial.println("BLE yayını başlatıldı.");
+}
+
+void loop() {
+  if (!stopAutoMode || ledToLight==0) {
+    // LED'leri sırayla 5 saniye arayla yak
+    digitalWrite(GREEN2, LOW);
+    digitalWrite(GREEN3, LOW);
+    digitalWrite(GREEN4, LOW);
+    Serial.println("LED'ler sırayla yanmaya başlıyor.");
+    digitalWrite(GREEN1, HIGH);
+    digitalWrite(RED1, LOW);
+    digitalWrite(RED2, HIGH);
+    digitalWrite(RED3, HIGH);
+    digitalWrite(RED4, HIGH);
+    Serial.println("LED 1 yandı.");
+    delay(5000);  // 5 saniye
+    digitalWrite(GREEN1, LOW);
+    digitalWrite(RED1, HIGH);
+    Serial.println("LED 1 söndü.");
+    if(!stopAutoMode|| ledToLight==0){
+    digitalWrite(GREEN2, HIGH);
+    digitalWrite(RED1, HIGH);
+    digitalWrite(RED2, LOW);
+    digitalWrite(RED3, HIGH);
+    digitalWrite(RED4, HIGH);
+    Serial.println("LED 2 yandı.");
+    delay(5000);  // 5 saniye
+    digitalWrite(GREEN2, LOW);
+    digitalWrite(RED2, HIGH);
+    Serial.println("LED 2 söndü.");
+    }
+    if(!stopAutoMode|| ledToLight==0){
+    digitalWrite(GREEN3, HIGH);
+    digitalWrite(RED1, HIGH);
+    digitalWrite(RED2, HIGH);
+    digitalWrite(RED3, LOW);
+    digitalWrite(RED4, HIGH);
+
+    Serial.println("LED 3 yandı.");
+    delay(5000);  // 5 saniye
+    digitalWrite(GREEN3, LOW);
+    digitalWrite(RED3, HIGH);
+
+    Serial.println("LED 3 söndü.");
+    }
+    if(!stopAutoMode|| ledToLight==0){
+    digitalWrite(GREEN4, HIGH);
+    digitalWrite(RED1, HIGH);
+    digitalWrite(RED2, HIGH);
+    digitalWrite(RED3, HIGH);
+    digitalWrite(RED4, LOW);
+
+    Serial.println("LED 4 yandı.");
+    delay(5000);  // 5 saniye
+    digitalWrite(GREEN4, LOW);
+    digitalWrite(RED4, HIGH);
+
+    Serial.println("LED 4 söndü.");
+    }
+  } else {
+    // BLE'den gelen komuta göre LED yak
+    Serial.print("BLE komutu alındı, LED: ");
+    digitalWrite(RED1, HIGH);
+    digitalWrite(RED2, HIGH);
+    digitalWrite(RED3, HIGH);
+    digitalWrite(RED4, HIGH);
+    if (ledToLight == 1) {
+      digitalWrite(GREEN1, HIGH);
+      digitalWrite(RED1, LOW);
+
+      Serial.println("LED 1 yandı.");
+    } else {
+      digitalWrite(GREEN1, LOW);
+    }
+
+    if (ledToLight == 2) {
+      digitalWrite(GREEN2, HIGH);
+      digitalWrite(RED2, LOW);
+
+      Serial.println("LED 2 yandı.");
+    } else {
+      digitalWrite(GREEN2, LOW);
+    }
+
+    if (ledToLight == 3) {
+      digitalWrite(GREEN3, HIGH);
+      digitalWrite(RED3, LOW);
+
+      Serial.println("LED 3 yandı.");
+    } else {
+      digitalWrite(GREEN3, LOW);
+    }
+    delay(5000);
+
+  }
+}
