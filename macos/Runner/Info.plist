@@ -2,10 +2,13 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>NSBluetoothAlwaysUsageDescription</key>
-    <string>Bluetooth cihazlarına bağlanmak için izin gereklidir.</string>
-    <key>NSBluetoothPeripheralUsageDescription</key>
-    <string>Bluetooth cihazlarıyla iletişim kurabilmek için izin gereklidir.</string>
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>Bluetooth cihazlarına erişim sağlamak için izne ihtiyacımız var.</string>
+<key>NSLocationWhenInUseUsageDescription</key>
+<string>Konum bilgisine erişim gereklidir.</string>
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>Bluetooth çevre birimlerine erişim gereklidir.</string>
+
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>

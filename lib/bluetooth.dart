@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:let_me_go/map.dart';
@@ -16,11 +18,37 @@ class _BleHomePageState extends State<BleHomePage> {
   }
 
 
-  Future<void> _checkAndRequestPermission() async {
+/*  Future<void> _checkAndRequestPermission() async {
     PermissionStatus status = await Permission.location.status;
     if (status.isDenied) {
       PermissionStatus newStatus = await Permission.location.request();
 
+    }
+  }
+*/
+  Future<void> _checkAndRequestPermission() async {
+    // Bluetooth izni kontrol ve talep
+    if (Platform.isMacOS) {
+      print("MacOS'ta belirli izinler desteklenmiyor.");
+      return;
+    }
+    if (await Permission.bluetooth.status.isDenied) {
+      var bluetoothStatus = await Permission.bluetooth.request();
+      if (bluetoothStatus.isGranted) {
+        print("Bluetooth izni verildi.");
+      } else {
+        print("Bluetooth izni reddedildi.");
+      }
+    }
+
+    // Konum izni kontrol ve talep
+    if (await Permission.location.status.isDenied) {
+      var locationStatus = await Permission.location.request();
+      if (locationStatus.isGranted) {
+        print("Konum izni verildi.");
+      } else {
+        print("Konum izni reddedildi.");
+      }
     }
   }
 

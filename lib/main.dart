@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:let_me_go/bluetooth.dart';
+import 'package:let_me_go/map.dart';
 
 void main() {
   runApp(const MyApp());
